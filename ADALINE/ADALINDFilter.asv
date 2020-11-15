@@ -1,0 +1,63 @@
+classdef ADALINDFilter
+   properties 
+       %ADALIND Network
+       network;
+       %Number of delays to consider
+       k;
+       
+   end
+   
+   
+   methods
+       %We will take k delays for our filter
+       function obj = ADALINDFilter(k)
+           obj.k = k;
+           obj.network = ADALIND(1,k);  
+       end
+       
+       %I think this might take a while
+       
+       function [obj, error] = identifySys(obj,input,response,alpha, epochs)
+           n = length(input);
+           inputs = zeros(obj.k,n-obj.k);
+           responses = zeros(n-obj.k);
+           disp(n-obj.k);
+           %Obtain the inputs
+           for i = obj.k:length(input)
+               delaysInp = zeros(obj.k,1);
+               responses(i) = response(i);
+               for j = i-obj.k:i-1
+                   delaysInp(j+obj.k-i+1) = input(j+1);
+               end
+               inputs(:,i) = delaysInp;
+           end
+           %Now train the networks
+           
+           [obj.network,error] = obj.network.train(inputs,responses,alpha,epochs);
+       end
+       
+       function sig = compute(obj,input)
+           n = length(input);
+           inputs =zeros(obj.k, n-obj.k);
+           
+           %Obtain the inputs
+           for i = obj.k:length(input)
+               delaysInp = zeros(obj.k,1);
+               for j = i-obj.k:i-1
+                   delaysInp(j+obj.k-i+1) = input(j+1);
+               end
+               inputs(:,i) = delaysInp;
+           end
+           sig  = zeros(n-obj.k);
+           disp(length(sig));
+           disp(size(inputs,2));
+           for i = 1:size(inputs,2)
+               sig(i) = obj.network.compute(inputs(:,i));
+           end
+       end
+   end
+    
+    
+    
+    
+end

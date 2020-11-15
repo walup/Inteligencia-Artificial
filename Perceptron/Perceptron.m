@@ -41,14 +41,16 @@ classdef Perceptron
            i = 1;
            %We will consider two stop conditions
            while(i <= epochs)
+               errorsInEpoch = [];
                for j = 1:dataSize
                    err = dataAns(:,j)-obj.compute(data(:,j));
-                   errorData = [errorData,norm(err)];
+                   errorsInEpoch = [errorsInEpoch,norm(err)];
                    %This is the part of the code that does
                    %the iterations 
                    obj.W = obj.W + err*data(:,j)';
                    obj.b = obj.b + err;
                end
+               errorData = [errorData,rms(errorsInEpoch)];
                i = i+1;
            end    
        end
