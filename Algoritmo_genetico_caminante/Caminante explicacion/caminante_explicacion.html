@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<!-- Definimos el lenguaje-->
+<html lang  = "es">
+<head>
+<!-- Titulo-->
+<title> Proyecto caminante </title>
+<!--Soporte símbolos español-->
+<meta charset = "utf-8">
+<meta name = "viewport" content = "width-device-width, initial-scale = 1">
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<!--Estilo CSS-->
+<style>
+*{
+  box-sizing: border-box;
+  font-family: "Courier New";
+}
+/*Estilo del header*/
+header{
+  background-color: #e3d03d;
+  padding: 30px;
+  text-align:center;
+  font-size:35px;
+  color: black;
+  font-family:"Courier New";
+}
+
+ul#navigation_bar li {
+  display:inline;
+  float:left;
+  padding-right: 5%;
+}
+
+nav{
+  float:left;
+  background: #d4d0c7;
+  width:100%;
+  margin:0px;
+  padding: 0px;
+  position:absolute;
+}
+
+nav ui{
+  list-style-type:circle;
+  padding: 0px;
+  margin:0px;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body:{
+  margin: 0px;
+  padding: 0px;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
+section{
+  content: "";
+  display:table;
+  clear:both;
+}
+
+article{
+  float: left;
+  padding: 35px;
+  width: 100%;
+  text-align:justify;
+  background-color: #e8e8e8;
+}
+
+p{
+  font-size:30;
+}
+#parameter_table{
+  margin-left:auto;
+  margin-right:auto;
+}
+footer{
+  background-color: #e3d03d;
+  padding: 5px;
+  text-align:center;
+  color: black;
+}
+
+code {
+  font-family: Consolas,"courier new";
+  color: crimson;
+  background-color: #f1f1f1;
+  padding: 2px;
+  font-size: 105%;
+}
+
+@media (max-width: 2000px) {
+  nav, article {
+    width: 100%;
+    height: auto;
+  }
+}
+</style>
+</head>
+<body>
+<header>
+<h2>Juego del buscador de tesoros</h2>
+<h3>Algoritmo genético</h3>
+</header>
+
+<section>
+  <nav>
+    <ul id = "navigation_bar">
+      <li><a href="#description">Descripción del problema</a></li>
+      <li><a href="#implementation">Implementación</a></li>
+      <li><a href="#results">Resultados</a></li>
+    </ul>
+  </nav>
+  </section>
+
+  <article id = "description">
+    <h1>Descripción del problema</h1>
+    <p>Nuestro problema consiste en un agente, el cual explorara un mundo de nxn
+       donde cada celda puede ser de 3 tipos:</p>
+  <ol>
+    <li> Celda vacia </li>
+    <li> Tesoro </li>
+    <li> Pared </li>
+  </ol>
+
+  <p>Las paredes se ubican en la periferia del mapa, mientras que los tesoros se
+     encuentran distribuidos aleatoriamente en este.</p>
+
+  <p>En cada una de las posiciones el agente tomará una decisión de acuerdo al
+  tipo de celda que haya en una vecindad de von Neumann (vease la figura)</p>
+
+  <img src  = "von_neumann.png" width="250" height="250" class = "center">
+
+  <p>Las decisiones que puede tomar el agente son 7: </p>
+
+  <ol>
+    <li> Moverse una celda hacia arriba </li>
+    <li> Moverse una celda hacia abajo </li>
+    <li> Moverse una celda hacia la derecha </li>
+    <li> Moverse una celda hacia la izquierda </li>
+    <li> Levantar tesoro </li>
+    <li> No hacer nada </li>
+    <li> Moverse en una dirección aleatoria </li>
+  </ol>
+
+<p>Conforme transcurre la simulación las acciones del agente son evaluadas bajo
+el siguiente criterio:</p>
+
+<ul>
+  <li> Si el caminante intenta levantar un tesoro donde no lo hay se le penaliza
+  quitandole 3 puntos. </li>
+  <li> Si el caminante choca con una pared al tomar su decisión se  le resta un
+  punto y se le reestablece a la posición anterior. </li>
+  <li> Si el caminante recoge un tesoro en forma correcta entonces se le suman
+  10 puntos. </li>
+</ul>
+  </article>
+
+
+  <article id = "implementation">
+    <h1>Implementación</h1>
+
+    <p>La implementación, realizada en Python 3 resulta un tanto extensa. Es por
+    ello que nos limitaremos a describir los rasgos mas destacables de la misma.
+    Si se desea revisar el código con detalle este se puede consultar en:
+    <url>www.github.com</url></p>
+
+    <p>Para resolver el problema se utilizó un algoritmo genético, el cual consta de
+    4 pasos: </p>
+
+    <ol>
+      <li>Evaluación</li>
+      <li>Selección</li>
+      <li>Cruzamiento</li>
+      <li>Mutación</li>
+    </ol>
+
+    <p>Antes de describir en que consiste cada una, es pertinente mencionar cual es
+    la representación del caminante en terminos computacionales.</p>
+
+    <h3>Caminante</h3>
+    <p>El caminante se implementó como un objeto, cuyo atributo principal es su
+    genotipo. Este genotipo es un arreglo, el cual contine las decisiones a tomar
+    ante los diferentes tipos de vecindario que el agente pudiese encontrar. Notese
+    que como en la vecindad de von Neumann examinamos 5 casillas distintas, y cada
+    una de ellas puede contener 3 tipos diferentes de celda, entonces el genotipo
+    posee \(3^{5} = 243\) entradas. Cada entrada es un número de 0 a 6 dependiendo
+    de la decisión que se tome.
+
+    Una de las cuestiones mas importantes que se tuvieron que resolver como parte
+    de la implementación fue: ¿Dada la información de los 5 vecinos del caminante.
+    como podemos saber a que indice del genotipo referirnos para buscar la decisión?
+
+    La información del entorno vendría dada como un arreglo de 5 entradas, las cuales
+    son números del 0 al 2 dependiendo del tipo de celda que se tenga. Estas 5 entradas
+    si lo pensamos describen un número en base 3 de 5 digitos, y el indice se obtendría
+    haciendo el traspaso hacia base 10, si indexamos las entradas como \(A_{i}\) entonces:</p>
+
+    <p class  = "center">$$\text{indice} = \sum_{i = 0}^{4} A_{i}\times 3^{i}$$</p>
+
+    <h3> Mapa </h3>
+    <p>Además del caminante se implementó un objeto de tipo mapa, cuyo atributo
+    principal es un arreglo bi dimensional de \(n\times n\). Cada entrada del mapa
+    es un número \(0,1,2\) dependiendo del tipo de celda que se tenga. Otras fun
+    cionalidades importantes de dicho objeto son la habilidad de distribuir cierta
+    cantidad de tesoros aleatoriamente, retirar un tesoro etc.</p>
+
+    <h3> Puppet Master </h3>
+    <p> El objeto que realiza la simulación de un caminante y lo evalua durante el
+    experimento se denominó Puppet Master (Una alusión satírica a Master of Puppets,
+    canción que trata sobre fuerzas ominosas y desconocidas que ejercen total control
+    sobre los sujetos).
+
+    El método principal de esta clase es <code>play (map, walker, steps)</code>,
+    el cual lleva a cabo una simulación que dura el número de pasos que establezca
+    el usuario como argumento de la función. </p>
+
+    <h3>El algoritmo evolutivo </h3>
+    <p>El objeto responsable de evolucionar a la población se denominó Darwin (por
+      claras razones). Este en primera instancia inicializa una población de caminantes
+      con genotipos aleatorios, para posteriormente llevar a cabo las 4 tareas que se
+      mencionaron a principio de esta sección. Procederemos a explicar en que consisten
+      estas con mas detalle: </p>
+<p>
+    <ol>
+      <li><p>Evaluación: Se utiliza un PuppetMaster para evaluar a cada miembro de la
+      población en 10 mapas distintos, cada uno con tesoros distribuidos aleatoriamente.
+      Los scores obtenidos en cada mapa se van sumando y al final lo que se tiene es un
+      un arreglo con los puntajes acumulados de los miembros de la población.</p></li>
+
+      <li><p>Selección: Los Scores obtenidos en el punto anterior representan una probabilidad
+      de selección para los miembros de la población. Esta probabilidad se puede obtener usando
+      la siguiente regla:
+
+      $$P_{i} = \frac{\text{Puntaje}-\text{Puntaje mínimo}}{\text{Puntaje máximo}-\text{Puntaje Mínimo}}$$
+
+      Dichas probabilidades se pueden usar como pesos con los cuales seleccionar aleatoriamente
+      una nueva población a partir de la original. En este caso se uso una función
+      predefinida en python: <code>random.choices</code>, la cual recibe como argumento
+      dichos pesos.
+      </p>
+      </li>
+      <li><p>Cruzamiento: El primer paso del cruzamiento consistió en barajar las posiciones
+      de los miembros de la población. Esto con el objetivo de que al tomar elementos sucesivos
+      como los padres de la nueva generación se estuviesen tomando duplas aleatorimente.
+      Hecho esto, se fueron construyendo 2 hijos por dupla, el primer hijo tomaba el genotipo
+      del primer padre hasta cierto punto (el punto se estableció aleatoriamente) y a partir de ahi
+      se copiaba el genotipo del segundo padre. Para el segundo hijo se hacía lo inverso.
+      </p></li>
+      <li>Mutación: Finalmente, como fuente de variabilidad en la población se estableció
+      una probabilidad de que cada miembro mutase. Para cada miembro de la población se
+      obtenia un número aleatorio entre 0 y 1, si ese número era menor que la probabilidad
+      de mutación, entonces se seleccionaban aleatoriamente 10 entradas del genotipo
+      y se les asignaba una decisión aleatoria.
+      </li>
+    </ol>
+
+</p>
+  <p>Estas 4 tareas se repiten por un número de generaciones dado.</p>
+  </article>
+
+  <article id = "results">
+    <h1>Resultados</h1>
+    <p>En esta sección se muestran los resultados obtenidos, comenzamos
+    enunciando el valor de los parámetros que se utilizó para evolucionar
+    la población</p>
+
+    <table id = "parameter_table">
+    <tr>
+      <th><b>Parámetro</b></th>
+      <th>Valor</th>
+    </tr>
+
+    <tr>
+      <th>Número de movimientos del caminante </th>
+      <th>1000</th>
+    </tr>
+
+    <tr>
+      <th>Tamaño del mapa</th>
+      <th>10 x 10</th>
+    </tr>
+
+    <tr>
+      <th>Tamaño de la población</th>
+      <th>200</th>
+    </tr>
+
+    <tr>
+      <th>Número de generaciones</th>
+      <th>3000</th>
+    </tr>
+
+    <tr>
+      <th>Número de mapas</th>
+      <th>10</th>
+    </tr>
+
+    <tr>
+      <th>
+        Número de tesoros por mapa
+      </th>
+      <th>6</th>
+    </tr>
+    </table>
+
+<p>En el siguiente gráfico se muestra como fue modificandose el mejor score de la
+población conforme transcurrieron las generaciones:</p>
+<img src = "graph_evolution.png" width = "500" height = "400" class = "center">
+
+
+<p>El genotipo de la solución evolucionada es el que se incluye a continuación: </p>
+
+<code>genotype = [6. 0. 3. 1. 0. 6. 0. 6. 2. 2. 2. 2. 1. 1. 2. 5. 3. 6. 3. 1. 3. 5. 6. 4.
+ 0. 1. 0. 3. 6. 6. 1. 0. 1. 3. 0. 3. 6. 6. 2. 6. 1. 2. 0. 6. 6. 3. 4. 0.
+ 2. 1. 1. 6. 6. 6. 2. 6. 1. 2. 0. 1. 5. 5. 2. 2. 3. 2. 2. 4. 2. 4. 1. 4.
+ 1. 1. 5. 6. 0. 5. 1. 4. 2. 4. 0. 4. 4. 6. 4. 1. 2. 3. 4. 6. 4. 4. 5. 1.
+ 4. 0. 4. 4. 5. 2. 2. 6. 6. 3. 1. 1. 4. 4. 3. 4. 3. 4. 3. 4. 2. 3. 6. 5.
+ 6. 3. 6. 4. 5. 2. 3. 5. 6. 2. 3. 0. 5. 3. 6. 4. 6. 4. 4. 1. 1. 1. 4. 5.
+ 0. 3. 4. 3. 2. 6. 4. 3. 3. 3. 6. 2. 6. 5. 2. 2. 0. 6. 5. 4. 4. 1. 4. 3.
+ 0. 0. 3. 6. 0. 6. 5. 6. 2. 5. 2. 3. 4. 5. 2. 5. 2. 6. 3. 5. 6. 1. 6. 2.
+ 3. 3. 3. 3. 3. 2. 1. 2. 6. 5. 4. 6. 2. 2. 4. 5. 3. 5. 0. 2. 6. 1. 2. 0.
+ 3. 0. 4. 2. 4. 5. 0. 3. 2. 6. 5. 0. 6. 1. 2. 5. 0. 2. 6. 2. 5. 4. 0. 5.
+ 1. 2. 6.]</code>
+
+ <p>Finalmente incluimos ejemplos de simulaciones con nuestro caminante
+ en 5 mapas distintos.</p>
+<h3>Mapa 1</h3>
+ <video width="500" height="400" controls class = "center">
+  <source src="mapa1.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+<h3>Mapa 2</h3>
+<video width="500" height="400" controls class = "center">
+ <source src="mapa2.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+<h3>Mapa 3</h3>
+<video width="500" height="400" controls class = "center">
+ <source src="mapa3.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+<h3>Mapa 4</h3>
+<video width="500" height="400" controls class = "center">
+ <source src="mapa4.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+<h3>Mapa 5</h3>
+<video width="500" height="400" controls class = "center">
+ <source src="mapa5.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+</article>
+
+<footer>
+<p>Datos de contacto</p>
+<p>Autor: Juan Uriel Legaria Peña</p>
+<p>E-mail: walup@ciencias.unam.mx</p>
+</footer>
+</body>
+
+</html>
